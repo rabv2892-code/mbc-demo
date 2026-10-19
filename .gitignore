@@ -9,6 +9,7 @@ dist
 .DS_Store
 coverage
 prisma/dev.db
+prisma/reset-activity.ts
 backups
 *.sql
 !prisma/migrations/
