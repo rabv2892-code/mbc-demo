@@ -1,0 +1,1 @@
+ALTER TABLE "CoffeeSettings" ADD COLUMN "purchasePricePerKg" DECIMAL(18,4) NOT NULL DEFAULT 40000;

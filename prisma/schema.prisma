@@ -1,0 +1,461 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN_CAFE
+  MOTARD
+}
+
+enum MotorcycleStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum MotorcycleOwnership {
+  OWNED
+  PARTNER
+}
+
+enum SupplyKind {
+  CUP
+  SPOON
+}
+
+enum SupplyMovementType {
+  PURCHASE
+  CONSUMED
+}
+
+enum RetailKind {
+  CIGARETTE
+  JUICE
+}
+
+enum RetailUnit {
+  PACK
+  PIECE
+}
+
+enum RetailMovementType {
+  PURCHASE
+  SALE
+}
+
+enum WaterMovementType {
+  PURCHASE
+  OFFERED_WITH_COFFEE
+  SEPARATE_SALE
+}
+
+enum LiptonMovementType {
+  PURCHASE
+  SALE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  rider           Rider?
+  coffeePurchases CoffeePurchase[]
+  coffeeSales     CoffeeSale[]
+  waterPurchases  WaterPurchase[]
+  waterSales      WaterSale[]
+  liptonPurchases LiptonPurchase[]
+  liptonSales     LiptonSale[]
+  supplyPurchases SupplyPurchase[]
+  retailPurchases RetailPurchase[]
+  retailSales     RetailSale[]
+  machines        Machine[]
+  deliveries      Delivery[]
+  auditLogs       AuditLog[]
+}
+
+model CoffeeSettings {
+  id                   String   @id @default(cuid())
+  cupsPerKg            Decimal  @db.Decimal(12, 4)
+  purchasePricePerKg   Decimal  @default(40000) @db.Decimal(18, 4)
+  cupSalePrice         Decimal  @db.Decimal(18, 2)
+  offerWaterWithCoffee Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+}
+
+model CoffeePurchase {
+  id         String   @id @default(cuid())
+  qtyKg      Decimal  @db.Decimal(12, 4)
+  totalPrice Decimal  @db.Decimal(18, 2)
+  pricePerKg Decimal  @db.Decimal(18, 4)
+  reference  String?
+  notes      String?
+  occurredAt DateTime
+  employeeId String
+  employee   User     @relation(fields: [employeeId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model CoffeeSale {
+  id           String   @id @default(cuid())
+  quantity     Int
+  unitPrice    Decimal  @db.Decimal(18, 2)
+  totalAmount  Decimal  @db.Decimal(18, 2)
+  costAmount   Decimal  @db.Decimal(18, 2)
+  profitAmount Decimal  @db.Decimal(18, 2)
+  occurredAt   DateTime
+  employeeId   String
+  employee     User     @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model WaterSettings {
+  id              String   @id @default(cuid())
+  sachetSalePrice Decimal  @db.Decimal(18, 2)
+  bidonSalePrice  Decimal  @default(0) @db.Decimal(18, 2)
+  sachetsPerPack  Int      @default(5)
+  updatedAt       DateTime @updatedAt
+}
+
+model WaterPurchase {
+  id             String   @id @default(cuid())
+  packCount      Int
+  sachetsPerPack Int
+  bidonCount     Int      @default(0)
+  quantity       Int
+  totalPrice     Decimal  @db.Decimal(18, 2)
+  avgUnitCost    Decimal  @db.Decimal(18, 4)
+  supplier       String?
+  occurredAt  DateTime
+  employeeId  String
+  employee    User     @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model WaterSale {
+  id          String   @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(18, 2)
+  totalAmount Decimal  @db.Decimal(18, 2)
+  occurredAt  DateTime
+  employeeId  String
+  employee    User     @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model WaterStockMovement {
+  id         String            @id @default(cuid())
+  type       WaterMovementType
+  quantity   Int
+  refId      String?
+  occurredAt DateTime
+  createdAt  DateTime          @default(now())
+
+  @@index([type])
+  @@index([occurredAt])
+}
+
+model LiptonSettings {
+  id             String   @id @default(cuid())
+  pieceSalePrice Decimal  @db.Decimal(18, 2)
+  piecesPerPack  Int      @default(100)
+  updatedAt      DateTime @updatedAt
+}
+
+model LiptonPurchase {
+  id            String   @id @default(cuid())
+  packCount     Int
+  piecesPerPack Int
+  quantity      Int
+  totalPrice    Decimal  @db.Decimal(18, 2)
+  avgUnitCost   Decimal  @db.Decimal(18, 4)
+  supplier      String?
+  occurredAt    DateTime
+  employeeId    String
+  employee      User     @relation(fields: [employeeId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model LiptonSale {
+  id          String   @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(18, 2)
+  totalAmount Decimal  @db.Decimal(18, 2)
+  occurredAt  DateTime
+  employeeId  String
+  employee    User     @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([employeeId])
+}
+
+model LiptonStockMovement {
+  id         String             @id @default(cuid())
+  type       LiptonMovementType
+  quantity   Int
+  refId      String?
+  occurredAt DateTime
+  createdAt  DateTime           @default(now())
+
+  @@index([type])
+  @@index([occurredAt])
+}
+
+model Motorcycle {
+  id                   String               @id @default(cuid())
+  plate                String               @unique
+  brand                String
+  model                String
+  ownership            MotorcycleOwnership  @default(OWNED)
+  ownerName            String?
+  purchaseDate         DateTime
+  purchasePrice        Decimal              @db.Decimal(18, 2)
+  insuranceFee         Decimal              @db.Decimal(18, 2) @default(0)
+  registrationFee      Decimal              @db.Decimal(18, 2) @default(0)
+  equipmentFee         Decimal              @db.Decimal(18, 2) @default(0)
+  maintenanceFee       Decimal              @db.Decimal(18, 2) @default(0)
+  otherFees            Decimal              @db.Decimal(18, 2) @default(0)
+  totalCost            Decimal              @db.Decimal(18, 2)
+  status               MotorcycleStatus     @default(ACTIVE)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  expenses             MotorcycleExpense[]
+  riders               Rider[]
+}
+
+model MotorcycleExpense {
+  id           String     @id @default(cuid())
+  motorcycleId String
+  motorcycle   Motorcycle @relation(fields: [motorcycleId], references: [id], onDelete: Cascade)
+  label        String
+  amount       Decimal    @db.Decimal(18, 2)
+  notes        String?
+  occurredAt   DateTime
+  createdAt    DateTime   @default(now())
+
+  @@index([motorcycleId])
+}
+
+model Rider {
+  id           String      @id @default(cuid())
+  fullName     String
+  phone        String?
+  isActive     Boolean     @default(true)
+  userId       String?     @unique
+  user         User?       @relation(fields: [userId], references: [id])
+  motorcycleId String?
+  motorcycle   Motorcycle? @relation(fields: [motorcycleId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deliveries   Delivery[]
+}
+
+model Delivery {
+  id           String             @id @default(cuid())
+  client       String
+  origin       String
+  destination  String
+  amount       Decimal            @db.Decimal(18, 2)
+  distanceKm   Decimal?           @db.Decimal(10, 2)
+  comment      String?
+  occurredAt   DateTime
+  riderId      String
+  rider        Rider              @relation(fields: [riderId], references: [id])
+  employeeId   String
+  employee     User               @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  amortization AmortizationEntry?
+
+  @@index([occurredAt])
+  @@index([riderId])
+  @@index([employeeId])
+}
+
+model AmortizationEntry {
+  id         String   @id @default(cuid())
+  deliveryId String   @unique
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  amount     Decimal  @db.Decimal(18, 2)
+  percent    Decimal  @db.Decimal(8, 4)
+  occurredAt DateTime
+  createdAt  DateTime @default(now())
+}
+
+model BusinessSettings {
+  id                            String   @id @default(cuid())
+  amortizationPercentPerDelivery Decimal @db.Decimal(8, 4)
+  nextMotorcycleTarget          Decimal  @db.Decimal(18, 2)
+  updatedAt                     DateTime @updatedAt
+}
+
+model SupplyPurchase {
+  id         String     @id @default(cuid())
+  kind       SupplyKind
+  quantity   Int
+  totalPrice Decimal    @db.Decimal(18, 2)
+  supplier   String?
+  occurredAt DateTime
+  employeeId String
+  employee   User       @relation(fields: [employeeId], references: [id])
+  createdAt  DateTime   @default(now())
+
+  @@index([kind])
+  @@index([occurredAt])
+}
+
+model SupplyStockMovement {
+  id         String              @id @default(cuid())
+  kind       SupplyKind
+  type       SupplyMovementType
+  quantity   Int
+  refId      String?
+  occurredAt DateTime
+  createdAt  DateTime            @default(now())
+
+  @@index([kind, type])
+  @@index([occurredAt])
+}
+
+model Machine {
+  id                String   @id @default(cuid())
+  name              String
+  purchaseDate      DateTime
+  purchasePrice     Decimal  @db.Decimal(18, 2)
+  usefulLifeMonths  Int
+  notes             String?
+  isActive          Boolean  @default(true)
+  occurredAt        DateTime
+  employeeId        String
+  employee          User     @relation(fields: [employeeId], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([occurredAt])
+}
+
+model RetailProduct {
+  id                 String      @id @default(cuid())
+  kind               RetailKind
+  name               String
+  piecesPerPack      Int
+  packPurchasePrice  Decimal     @db.Decimal(18, 2)
+  packSalePrice      Decimal     @db.Decimal(18, 2)
+  pieceSalePrice     Decimal     @db.Decimal(18, 2)
+  isActive           Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  purchases          RetailPurchase[]
+  sales              RetailSale[]
+  movements          RetailStockMovement[]
+
+  @@unique([kind, name])
+}
+
+model RetailPurchase {
+  id            String        @id @default(cuid())
+  productId     String
+  product       RetailProduct @relation(fields: [productId], references: [id])
+  packCount     Int
+  piecesPerPack Int
+  quantity      Int
+  totalPrice    Decimal       @db.Decimal(18, 2)
+  avgUnitCost   Decimal       @db.Decimal(18, 4)
+  supplier      String?
+  occurredAt    DateTime
+  employeeId    String
+  employee      User          @relation(fields: [employeeId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([occurredAt])
+  @@index([productId])
+}
+
+model RetailSale {
+  id            String        @id @default(cuid())
+  productId     String
+  product       RetailProduct @relation(fields: [productId], references: [id])
+  unit          RetailUnit
+  quantity      Int
+  pieceQuantity Int
+  unitPrice     Decimal       @db.Decimal(18, 2)
+  totalAmount   Decimal       @db.Decimal(18, 2)
+  occurredAt    DateTime
+  employeeId    String
+  employee      User          @relation(fields: [employeeId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([occurredAt])
+  @@index([productId])
+}
+
+model RetailStockMovement {
+  id         String              @id @default(cuid())
+  productId  String
+  product    RetailProduct       @relation(fields: [productId], references: [id])
+  type       RetailMovementType
+  quantity   Int
+  refId      String?
+  occurredAt DateTime
+  createdAt  DateTime            @default(now())
+
+  @@index([productId, type])
+  @@index([occurredAt])
+}
+
+model CatalogItem {
+  id          String   @id @default(cuid())
+  businessKey String   @unique
+  name        String
+  payload     Json
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  module     String
+  oldValue   Json?
+  newValue   Json?
+  occurredAt DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([occurredAt])
+  @@index([module])
+  @@index([userId])
+}

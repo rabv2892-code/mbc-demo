@@ -1,0 +1,29 @@
+# Blueprint Render (démo). Aucun secret ici.
+# Ne pas appliquer automatiquement : créer le service à la main après autorisation.
+services:
+  - type: web
+    name: mbc-demo
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run start:hosted
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: MBC_ENV
+        value: demo
+      - key: APP_TZ
+        value: Africa/Conakry
+      - key: COOKIE_NAME
+        value: mbc_token
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SEED_FIXTURE_DATA
+        value: "false"

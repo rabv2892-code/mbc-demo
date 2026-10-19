@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mbc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mbc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mbc_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-mbc}
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - mbc_pg_data:/var/lib/postgresql/data
+
+volumes:
+  mbc_pg_data:
