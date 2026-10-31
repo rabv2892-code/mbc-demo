@@ -55,7 +55,12 @@ export default function UsersPage() {
           <Select
             value={r.role}
             onChange={async (e) => {
-              await api(`/api/v1/users/${r.id}`, { method: "PATCH", body: JSON.stringify({ role: e.target.value }) });
+              setError("");
+              try {
+                await api(`/api/v1/users/${r.id}`, { method: "PATCH", body: JSON.stringify({ role: e.target.value }) });
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Erreur");
+              }
               await load();
             }}
           >
@@ -68,7 +73,12 @@ export default function UsersPage() {
             size="sm"
             variant={r.isActive ? "danger" : "secondary"}
             onClick={async () => {
-              await api(`/api/v1/users/${r.id}`, { method: "PATCH", body: JSON.stringify({ isActive: !r.isActive }) });
+              setError("");
+              try {
+                await api(`/api/v1/users/${r.id}`, { method: "PATCH", body: JSON.stringify({ isActive: !r.isActive }) });
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Erreur");
+              }
               await load();
             }}
           >
@@ -87,7 +97,9 @@ export default function UsersPage() {
           <form onSubmit={submit} className="space-y-3">
             <Field label="Nom"><Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required /></Field>
             <Field label="Email"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></Field>
-            <Field label="Mot de passe"><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} /></Field>
+            <Field label="Mot de passe">
+              <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={12} />
+            </Field>
             <Field label="Rôle">
               <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
                 <option value="SUPER_ADMIN">Super Admin</option>

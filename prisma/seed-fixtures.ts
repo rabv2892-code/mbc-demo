@@ -1,7 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
+import { assertFixtureDataAllowed } from "../src/lib/env";
 
 export async function seedFixtureData(db: PrismaClient) {
   if (process.env.SEED_FIXTURE_DATA !== "true") return;
+  assertFixtureDataAllowed();
 
   const admin = await db.user.findFirst({ where: { role: "SUPER_ADMIN", isActive: true } });
   if (!admin) {

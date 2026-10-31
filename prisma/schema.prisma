@@ -459,3 +459,14 @@ model AuditLog {
   @@index([module])
   @@index([userId])
 }
+
+model LoginThrottle {
+  id          String    @id @default(cuid())
+  bucket      String    @unique
+  failures    Int       @default(0)
+  windowStart DateTime
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([lockedUntil])
+}

@@ -4,15 +4,10 @@ import { Prisma } from "@prisma/client";
 import { AuthError, requireSession, type SessionUser } from "@/server/auth/session";
 import { assertRole } from "@/server/rbac";
 import type { Role } from "@prisma/client";
+import { clientSafeMessage } from "@/server/client-message";
 
 export function json<T>(data: T, status = 200) {
   return NextResponse.json(data, { status });
-}
-
-function isTechnicalMessage(message: string) {
-  return /prisma|TURBOPACK|invocation in|node_modules|Unique constraint failed|Invalid `prisma|\\\\src\\\\|\\\\.next\\\\/i.test(
-    message,
-  );
 }
 
 function prismaUserMessage(error: Prisma.PrismaClientKnownRequestError) {
@@ -35,6 +30,9 @@ function zodUserMessage(error: ZodError) {
   const issue = error.issues[0];
   if (!issue) return "Données invalides";
   const field = issue.path.join(".");
+  if (field === "password") {
+    return clientSafeMessage(issue.message, "Le mot de passe ne respecte pas les règles de sécurité.");
+  }
   if (issue.code === "too_small") {
     if (field.includes("Price") || field.includes("price") || field.includes("Amount")) {
       return "Indiquez un prix supérieur à 0.";
@@ -53,7 +51,10 @@ function zodUserMessage(error: ZodError) {
 
 export function errorResponse(error: unknown) {
   if (error instanceof AuthError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      { error: clientSafeMessage(error.message, "Accès refusé") },
+      { status: error.status },
+    );
   }
   if (error instanceof ZodError) {
     return NextResponse.json({ error: zodUserMessage(error) }, { status: 400 });
@@ -62,9 +63,7 @@ export function errorResponse(error: unknown) {
     return NextResponse.json({ error: prismaUserMessage(error) }, { status: 400 });
   }
   if (error instanceof Error) {
-    const message = isTechnicalMessage(error.message)
-      ? "Une erreur s'est produite. Vérifiez les informations saisies."
-      : error.message;
+    const message = clientSafeMessage(error.message, "Une erreur s'est produite. Vérifiez les informations saisies.");
     return NextResponse.json({ error: message }, { status: 400 });
   }
   return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

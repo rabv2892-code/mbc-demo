@@ -1,10 +1,6 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import {
-  allowDemoAccounts,
-  assertPublicAdminPassword,
-  assertSeedEmail,
-} from "../src/lib/env";
+import { allowDemoAccounts, assertFixtureDataAllowed, assertPublicAdminPassword, assertSeedEmail } from "../src/lib/env";
 import { seedFixtureData } from "./seed-fixtures";
 
 const db = new PrismaClient();
@@ -132,6 +128,9 @@ async function ensureBootstrapAdmin() {
 }
 
 async function main() {
+  if (process.env.SEED_FIXTURE_DATA === "true") {
+    assertFixtureDataAllowed();
+  }
   await ensureSettings();
 
   if (allowDemoAccounts()) {

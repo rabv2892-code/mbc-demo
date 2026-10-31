@@ -64,7 +64,7 @@ Sans frais au départ, pour une URL de test. **Ne pas copier la base locale.** A
    - Start : `npm run start:hosted` (écoute `PORT`, puis `prisma migrate deploy` + `next start`)
    - Health : `/api/health`
 4. Renseigner les variables Render (valeurs dans le tableau de bord, jamais dans Git) : `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `MBC_ENV=demo`, `APP_TZ=Africa/Conakry`.
-5. Une fois le service vert : Shell Render `npm run db:seed`. Optionnel : `SEED_FIXTURE_DATA=true` pour des ventes/achats fictifs.
+5. Une fois le service vert : Shell Render `npm run db:seed` pour créer le Super Admin. Laisser `SEED_FIXTURE_DATA=false` : les ventes fictives sont refusées sur Neon et sur une instance publique.
 6. Ouvrir `https://….onrender.com/login` avec le Super Admin créé.
 
 Limites gratuites : endormissement après inactivité, froid au réveil, quota Neon, pas d’uptime garanti. Cookie `secure` dès que `NODE_ENV=production`.

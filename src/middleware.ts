@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { canAccessPath, homePathForRole, type Role } from "@/lib/rbac";
+import { homePathForRole, type Role } from "@/lib/rbac";
 import { requireJwtSecret } from "@/lib/env";
 
 const COOKIE_NAME = process.env.COOKIE_NAME || "mbc_token";
@@ -39,10 +39,10 @@ export async function middleware(request: NextRequest) {
   try {
     const { payload } = await jwtVerify(token, secret());
     const role = payload.role as Role;
-    if (pathname === "/") {
-      return NextResponse.redirect(new URL(homePathForRole(role), request.url));
+    if (!payload.sub || !role) {
+      throw new Error("Jeton invalide");
     }
-    if (!isPublic && !canAccessPath(role, pathname)) {
+    if (pathname === "/") {
       return NextResponse.redirect(new URL(homePathForRole(role), request.url));
     }
     return withPathHeader(request, pathname);
